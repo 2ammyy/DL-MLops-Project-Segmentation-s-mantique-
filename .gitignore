@@ -1,0 +1,45 @@
+# --- Données (jamais versionnées : lourdes + sensibles) ---
+# On ignore le CONTENU du dossier, pas le dossier lui-même,
+# sinon Git ne peut pas tracké le .gitkeep (parent exclu = sous-arbre invisible)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/new/*
+!data/new/.gitkeep
+
+# --- Artefacts ML ---
+models/checkpoints/*
+!models/checkpoints/.gitkeep
+models/registry/*
+!models/registry/.gitkeep
+*.pt
+*.pth
+*.onnx
+mlruns/
+mlflow.db
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Node / React ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# --- Docker / K8s locaux ---
+kubeconfig
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
