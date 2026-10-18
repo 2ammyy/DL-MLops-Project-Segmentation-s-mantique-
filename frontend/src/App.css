@@ -1,0 +1,93 @@
+.app-header h1 {
+  margin-bottom: 4px;
+  font-size: 1.8rem;
+}
+
+.app-header p {
+  margin-top: 0;
+  color: #8fa0bd;
+}
+
+.upload-btn {
+  display: inline-block;
+  margin: 12px 0;
+  padding: 10px 18px;
+  background: #2563eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.upload-btn:hover {
+  background: #1d4ed8;
+}
+
+.upload-btn input {
+  display: none;
+}
+
+.error-box {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #3f1d24;
+  border: 1px solid #b43952;
+  border-radius: 8px;
+  color: #ffb4c1;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #172033;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #a9b8d6;
+}
+
+.mask-overlay {
+  margin-top: 8px;
+}
+
+.overlay-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.overlay-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: #5b6b8c;
+  background: #131a29;
+  border: 1px dashed #2c3a55;
+  border-radius: 10px;
+}
+
+.overlay-controls {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: #172033;
+  border-radius: 10px;
+}
+
+.slider-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.opacity-slider {
+  width: 100%;
+  accent-color: #2563eb;
+}
+
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #8fa0bd;
+  margin-top: 4px;
+}
