@@ -1,6 +1,10 @@
 # --- Données (jamais versionnées : lourdes + sensibles) ---
-# On ignore le CONTENU du dossier, pas le dossier lui-même,
+# On ignore le CONTENU de data/, pas data/ lui-même,
 # sinon Git ne peut pas tracké le .gitkeep (parent exclu = sous-arbre invisible)
+data/*
+!data/raw/
+!data/processed/
+!data/new/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
