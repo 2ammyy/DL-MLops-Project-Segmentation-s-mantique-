@@ -1,4 +1,5 @@
 import base64
+import os
 import time
 from pathlib import Path
 
@@ -11,7 +12,11 @@ from src.models.factory import create_model
 
 
 class SegmentationModel:
-    def __init__(self, checkpoint_path="models/checkpoints/best.pt", device=None, threshold=0.5):
+    def __init__(self, checkpoint_path=None, device=None, threshold=0.5):
+        if checkpoint_path is None:
+            checkpoint_path = os.environ.get(
+                "CHECKPOINT_PATH", "models/checkpoints/best.pt"
+            )
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = torch.device(device)

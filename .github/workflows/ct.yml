@@ -1,0 +1,84 @@
+name: CT (Continuous Training)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/new/**"
+  workflow_dispatch:
+    inputs:
+      epochs:
+        description: "Nombre d'epochs"
+        default: "10"
+      promote_baseline:
+        description: "Mettre a jour la baseline si non-regression OK"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  train-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download dataset
+        run: python scripts/download_dataset.py
+
+      - name: Simulate arrival of new data
+        run: |
+          if [ -n "$(ls -A data/new 2>/dev/null | grep -v .gitkeep)" ]; then
+            echo "Nouvelles donnees detectees dans data/new/ :"
+            ls -la data/new/
+            cp -n data/new/* data/raw/Kvasir-SEG/images/ 2>/dev/null || true
+          else
+            echo "Pas de nouvelles donnees (workflow_dispatch) : re-entrainement standard"
+          fi
+
+      - name: Train
+        run: |
+          python -m src.train \
+            --epochs "${{ github.event.inputs.epochs || '10' }}" \
+            --batch-size 8 \
+            --lr 1e-4 \
+            --seed 42
+
+      - name: Evaluate candidate (protocole officiel)
+        env:
+          MLFLOW_RUN_ID: ${{ github.run_id }}
+        run: python scripts/evaluate.py
+
+      - name: Non-regression gate (Dice_v2 >= Dice_v1 - 0.01)
+        run: python -m pytest tests/test_non_regression.py -v
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-${{ github.run_id }}
+          path: |
+            models/checkpoints/best.pt
+            models/registry/metrics.json
+
+      - name: Promote candidate to baseline
+        if: ${{ github.event.inputs.promote_baseline == 'true' }}
+        run: |
+          python scripts/update_baseline.py
+          git config user.name "ct-bot"
+          git config user.email "ct-bot@users.noreply.github.com"
+          git add pipelines/baseline.json
+          git diff --cached --quiet || git commit -m "[MLOps] ct: promote candidate to baseline (run ${{ github.run_id }})"
+          git push

@@ -1,0 +1,12 @@
+{
+  "dice": 0.3590638467576355,
+  "iou": 0.23667060863226652,
+  "samples": 32,
+  "seed": 42,
+  "model": "unet",
+  "encoder": "resnet18",
+  "checkpoint_epoch": 1,
+  "checkpoint_path": "models/checkpoints/best.pt",
+  "created_at": "2026-10-18T17:29:58.349529+00:00",
+  "run_id": "local"
+}
