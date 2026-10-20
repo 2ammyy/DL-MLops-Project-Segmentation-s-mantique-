@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from api.inference import SegmentationModel
 from api.schemas import ErrorResponse, HealthResponse, PredictResponse
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+FRONTEND_DIST = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 
 
 @asynccontextmanager
@@ -64,3 +67,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Echec d'inference: {exc}") from exc
 
     return PredictResponse(filename=file.filename or "image", **result)
+
+
+if FRONTEND_DIST.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
