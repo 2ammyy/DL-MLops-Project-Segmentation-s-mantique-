@@ -10,6 +10,8 @@ import torch
 from src.data.augmentation import get_val_transforms
 from src.models.factory import create_model
 
+from api.metrics import INFERENCE_SECONDS, POLYP_AREA_GAUGE
+
 
 class SegmentationModel:
     def __init__(self, checkpoint_path=None, device=None, threshold=0.5):
@@ -42,6 +44,11 @@ class SegmentationModel:
 
     @torch.no_grad()
     def predict(self, image_bgr):
+        with INFERENCE_SECONDS.time():
+            return self._predict(image_bgr)
+
+    @torch.no_grad()
+    def _predict(self, image_bgr):
         start = time.perf_counter()
         h0, w0 = image_bgr.shape[:2]
         rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
@@ -52,6 +59,7 @@ class SegmentationModel:
 
         mask_full = cv2.resize(mask_small, (w0, h0), interpolation=cv2.INTER_NEAREST)
         area_ratio = float(mask_full.mean())
+        POLYP_AREA_GAUGE.set(area_ratio)
         ok, buf = cv2.imencode(".png", mask_full * 255)
         if not ok:
             raise RuntimeError("Echec encodage PNG du masque")

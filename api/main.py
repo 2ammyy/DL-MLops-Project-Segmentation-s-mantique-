@@ -3,11 +3,12 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from api.inference import SegmentationModel
+from api.metrics import MODEL_DICE_GAUGE, PREDICTION_COUNT
 from api.schemas import ErrorResponse, HealthResponse, PredictResponse
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
@@ -18,6 +19,7 @@ FRONTEND_DIST = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 async def lifespan(app: FastAPI):
     app.state.model = SegmentationModel()
     app.state.model_ready = True
+    MODEL_DICE_GAUGE.set(app.state.model.val_dice)
     yield
     app.state.model_ready = False
 
@@ -64,9 +66,18 @@ async def predict(file: UploadFile = File(...)):
     try:
         result = app.state.model.predict(image)
     except Exception as exc:
+        PREDICTION_COUNT.labels(status="error").inc()
         raise HTTPException(status_code=500, detail=f"Echec d'inference: {exc}") from exc
 
+    PREDICTION_COUNT.labels(status="success").inc()
     return PredictResponse(filename=file.filename or "image", **result)
+
+
+@app.get("/metrics")
+async def metrics():
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 if FRONTEND_DIST.exists():

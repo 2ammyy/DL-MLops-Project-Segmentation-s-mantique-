@@ -1,0 +1,68 @@
+groups:
+  - name: polypcopilot
+    interval: 30s
+    rules:
+      - alert: ModelPerformanceBelowThreshold
+        expr: polypcopilot_model_val_dice < 0.85
+        for: 5m
+        labels:
+          severity: critical
+          team: mlops
+        annotations:
+          summary: "Dice score du modele sous le seuil critique (0.85)"
+          description: >
+            Le modele charge a un Dice de validation de
+            {{ $value | humanize }}, sous le seuil de 0.85.
+            Verifier le dernier run CT et envisager un rollback.
+
+      - alert: ApiDown
+        expr: up{job="polypcopilot-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "L'API PolypCopilot ne repond plus"
+          description: >
+            Le job polypcopilot-api est injoignable depuis plus
+            d'une minute. Les pods K8s sont peut-etre en CrashLoopBackOff.
+
+      - alert: HighInferenceLatency
+        expr: histogram_quantile(0.95, rate(polypcopilot_inference_seconds_bucket[5m])) > 1.0
+        for: 10m
+        labels:
+          severity: warning
+          team: mlops
+        annotations:
+          summary: "Latence d'inference P95 superieure a 1s"
+          description: >
+            La latence P95 est de {{ $value | humanizeDuration }}.
+            Verifier la charge du cluster ou un eventuel GPU absent.
+
+      - alert: AnomalousPolypArea
+        expr: polypcopilot_polyp_area_ratio > 0.95
+        for: 0m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Surface de polype anormalement elevee (>95%)"
+          description: >
+            Le modele predit un polype couvrant plus de 95% de l'image.
+            Possible drift des donnees ou image non-coloscopique envoyee.
+
+      - alert: HighErrorRate
+        expr: |
+          rate(polypcopilot_predictions_total{status="error"}[5m])
+            /
+          rate(polypcopilot_predictions_total[5m])
+            > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Taux d'erreurs d'inference superieur a 5%"
+          description: >
+            Plus de 5% des predictions echouent sur les 5 dernieres
+            minutes. Verifier les logs et l'integrite du checkpoint.
