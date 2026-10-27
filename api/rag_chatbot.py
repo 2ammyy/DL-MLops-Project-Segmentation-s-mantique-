@@ -89,3 +89,42 @@ Question : {question}
 
 # Ingestion au démarrage
 ingest_guidelines()
+
+def generate_report(polyp_area_ratio: float, original_width: int, original_height: int) -> str:
+    """Génère un compte-rendu médical basé sur les résultats de la segmentation."""
+    
+    # Simulation d'une taille en mm basée sur le ratio de surface
+    size_mm = (polyp_area_ratio * 100) 
+    if size_mm < 5:
+        risk = "faible"
+    elif size_mm <= 10:
+        risk = "modéré"
+    else:
+        risk = "élevé"
+
+    # Le prompt doit être défini AVANT d'être utilisé
+    prompt = f"""<|im_start|>system
+Tu es un gastro-entérologue. Rédige un compte-rendu clinique court et professionnel en français.
+<|im_end|>
+<|im_start|>user
+Données de l'IA de segmentation :
+- Surface du polype : {polyp_area_ratio:.1%} de l'image.
+- Taille estimée : {size_mm:.1f} mm.
+- Niveau de risque associé : {risk}.
+
+Rédige un compte-rendu avec exactement deux sections :
+1. **Conclusion** (Analyse de la taille et du risque).
+2. **Recommandations** (Que doit faire le médecin ?).
+
+N'invente pas de détails sur l'image. Sois concis.
+<|im_end|>
+<|im_start|>assistant
+"""
+    
+    # Appel du modèle avec le prompt
+    output = llm_pipeline(prompt, do_sample=True, temperature=0.3, max_new_tokens=500)
+    
+    # Extraction de la réponse
+    answer = output[0]['generated_text'].split("<|im_start|>assistant\n")[-1].strip()
+    
+    return answer

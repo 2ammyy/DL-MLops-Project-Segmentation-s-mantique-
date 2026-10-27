@@ -98,5 +98,25 @@ async def chat_endpoint(request: ChatRequest):
     result = ask_question(request.message)
     return result
 
+from pydantic import BaseModel
+from api.rag_chatbot import generate_report
+
+class ReportRequest(BaseModel):
+    polyp_area_ratio: float
+    original_width: int
+    original_height: int
+
+class ReportResponse(BaseModel):
+    report: str
+
+@app.post("/generate-report", response_model=ReportResponse)
+async def generate_report_endpoint(request: ReportRequest):
+    report_text = generate_report(
+        request.polyp_area_ratio, 
+        request.original_width, 
+        request.original_height
+    )
+    return ReportResponse(report=report_text)
+
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
