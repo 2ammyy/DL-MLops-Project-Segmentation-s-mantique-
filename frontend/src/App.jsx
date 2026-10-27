@@ -2,6 +2,8 @@ import { useState } from "react";
 import MaskOverlay from "./MaskOverlay.jsx";
 import "./App.css";
 
+import ChatBot from './components/ChatBot';
+
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 export default function App() {
@@ -64,6 +66,7 @@ export default function App() {
         imageUrl={image}
         maskBase64={result ? result.mask_base64 : null}
       />
+      <ChatBot />
     </div>
   );
 }

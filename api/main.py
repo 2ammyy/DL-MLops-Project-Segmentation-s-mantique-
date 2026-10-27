@@ -6,6 +6,7 @@ import numpy as np
 from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from api.rag_chatbot import ask_question
 
 from api.inference import SegmentationModel
 from api.metrics import MODEL_DICE_GAUGE, PREDICTION_COUNT
@@ -79,6 +80,23 @@ async def metrics():
 
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
+from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[str]
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(request: ChatRequest):
+    """
+    Endpoint du chatbot médical RAG.
+    Reçoit une question et retourne une réponse basée sur les guidelines.
+    """
+    result = ask_question(request.message)
+    return result
 
 if FRONTEND_DIST.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
