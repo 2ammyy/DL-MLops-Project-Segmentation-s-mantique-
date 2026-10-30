@@ -26,3 +26,9 @@ httpx>=0.27.0
 
 # --- Monitoring ---
 prometheus-client>=0.20.0
+
+
+# --- Chatbot RAG ---
+chromadb
+sentence-transformers
+transformers
