@@ -55,31 +55,37 @@ def ingest_guidelines():
         collection.add(documents=documents, metadatas=metadatas, ids=ids)
         print(f"{len(documents)} chunks ajoutés à la base.")
 
-def ask_question(question: str) -> dict:
+def ask_question(question: str, language: str = "fr") -> dict:
     """Pose une question au chatbot en utilisant le RAG."""
     # 1. Recherche des documents pertinents
     results = collection.query(query_texts=[question], n_results=2)
     
     if not results['documents'] or not results['documents'][0]:
-        return {"answer": "Je n'ai pas trouvé d'information pertinente.", "sources": []}
+        msg = "I couldn't find relevant information in my guidelines." if language == "en" else "Je n'ai pas trouvé d'information pertinente dans mes guidelines."
+        return {"answer": msg, "sources": []}
 
     context = "\n\n".join(results['documents'][0])
     sources = [meta['source'] for meta in results['metadatas'][0]]
 
-    # 2. Génération avec le LLM local
+    # 2. Adaptation du prompt selon la langue
+    if language == "en":
+        system_prompt = "You are an AI medical assistant specialized in gastroenterology. Answer the user's question based ONLY on the provided context. If the answer is not in the context, say it clearly."
+    else:
+        system_prompt = "Tu es un assistant médical spécialisé en gastro-entérologie. Réponds à la question de l'utilisateur en te basant UNIQUEMENT sur le contexte suivant. Si la réponse n'est pas dans le contexte, dis-le clairement."
+
     prompt = f"""<|im_start|>system
-Tu es un assistant médical. Réponds UNIQUEMENT avec le contexte fourni.
+{system_prompt}
 <|im_end|>
 <|im_start|>user
-Contexte :
+Context:
 {context}
 
-Question : {question}
+Question: {question}
 <|im_end|>
 <|im_start|>assistant
 """
     
-    output = llm_pipeline(prompt, do_sample=False, temperature=0.1)
+    output = llm_pipeline(prompt, do_sample=False, max_new_tokens=300)
     answer = output[0]['generated_text'].split("<|im_start|>assistant\n")[-1].strip()
     
     return {

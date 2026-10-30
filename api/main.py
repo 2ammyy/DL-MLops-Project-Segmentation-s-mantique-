@@ -84,6 +84,7 @@ from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
     message: str
+    language: str = "fr" # "fr" ou "en"
 
 class ChatResponse(BaseModel):
     answer: str
@@ -91,11 +92,7 @@ class ChatResponse(BaseModel):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    """
-    Endpoint du chatbot médical RAG.
-    Reçoit une question et retourne une réponse basée sur les guidelines.
-    """
-    result = ask_question(request.message)
+    result = ask_question(request.message, request.language)
     return result
 
 from pydantic import BaseModel
