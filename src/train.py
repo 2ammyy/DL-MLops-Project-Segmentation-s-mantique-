@@ -171,6 +171,7 @@ def main():
     last_path = checkpoint_dir / "last.pt"
 
     mlflow.set_experiment("PolypCopilot")
+    mlflow.set_tracking_uri("file:./mlruns")
     run_name = f"{args.model}_{args.encoder or 'default'}_{datetime.now():%Y%m%d-%H%M%S}"
     best_dice, best_epoch, epochs_no_improve = 0.0, -1, 0
 
